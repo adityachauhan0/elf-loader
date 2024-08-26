@@ -16,8 +16,8 @@ void loader_cleanup() {
     free(phdr);
 }
 
-void load_and_run_elf(char* exe) {
-    fd = open(exe, O_RDONLY);
+void load_and_run_elf(char** exe) {
+    fd = open(exe[0], O_RDONLY);
     if (fd == -1) {
         perror("Error opening file");
         exit(1);
@@ -41,7 +41,7 @@ void load_and_run_elf(char* exe) {
     // Find PT_LOAD segment containing entry point
     Elf32_Phdr *load_segment = NULL;
     for (int i = 0; i < ehdr->e_phnum; i++) {
-        if (phdr[i].p_type == PT_LOAD && ehdr->e_entry >= phdr[i].p_vaddr && 
+        if (phdr[i].p_type == PT_LOAD && ehdr->e_entry >= phdr[i].p_vaddr &&
             ehdr->e_entry < (phdr[i].p_vaddr + phdr[i].p_memsz)) {
             load_segment = &phdr[i];
             break;
@@ -54,7 +54,7 @@ void load_and_run_elf(char* exe) {
     }
 
     // Map segment into memory
-    mapped_memory = mmap(NULL, load_segment->p_memsz, PROT_READ | PROT_WRITE | PROT_EXEC, 
+    mapped_memory = mmap(NULL, load_segment->p_memsz, PROT_READ | PROT_WRITE | PROT_EXEC,
                          MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (mapped_memory == MAP_FAILED) {
         perror("Error mapping memory");
@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
         exit(1);
     }
 
-    load_and_run_elf(argv[1]);
+    load_and_run_elf(&argv[1]);
     loader_cleanup();
     return 0;
 }
